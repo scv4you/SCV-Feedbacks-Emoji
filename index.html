@@ -11,7 +11,7 @@
       margin: 0;
       padding: 20px;
       font-family: 'Segoe UI', Arial, sans-serif;
-      /* Using a reliable high-res Sarawak Pua Kumbu pattern */
+      /* Background: Sarawak Pua Kumbu Pattern */
       background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
                         url('https://images.squarespace-cdn.com/content/v1/58983995414fb571f54ad964/1589360814986-W19O3W8F3T006T8KMB9U/Pua+Kumbu+Details+1.jpg'); 
       background-size: cover;
@@ -30,8 +30,8 @@
       box-shadow: 0 20px 50px rgba(0,0,0,0.5);
       text-align: center;
       width: 100%;
-      max-width: 850px;
-      border-top: 10px solid #8B0000;
+      max-width: 900px;
+      border-top: 10px solid #8B0000; /* Sarawak Red Accent */
     }
 
     h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); margin-bottom: 10px; color: #222; }
@@ -49,7 +49,7 @@
       border-radius: 25px;
       padding: 30px 10px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -61,45 +61,83 @@
       background: #fff8f8;
     }
 
-    .emoji { font-size: clamp(3rem, 10vw, 5rem); margin-bottom: 15px; }
-    .label { font-size: 1.1rem; font-weight: 800; color: #8B0000; text-transform: uppercase; }
+    .emoji-btn:active {
+      transform: scale(0.95);
+    }
 
+    .emoji { font-size: clamp(3rem, 10vw, 5rem); margin-bottom: 15px; }
+    
+    .label { 
+      font-size: clamp(0.8rem, 2vw, 1.1rem); 
+      font-weight: 800; 
+      color: #8B0000; 
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    /* Screen Sections */
+    #survey-ui { display: block; }
     #thank-you-ui { display: none; padding: 60px 0; }
+    
     .success-icon { font-size: 6rem; margin-bottom: 20px; }
 
-    @media (min-width: 768px) { .emoji-group { grid-template-columns: repeat(4, 1fr); } }
+    /* Layout for Tablet/Desktop */
+    @media (min-width: 768px) { 
+      .emoji-group { grid-template-columns: repeat(4, 1fr); } 
+    }
+
+    /* Layout for Phone Landscape */
+    @media (max-height: 500px) and (orientation: landscape) {
+      body { align-items: flex-start; padding: 10px; }
+      .container { padding: 15px; }
+      .emoji-group { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+      .emoji { font-size: 2.5rem; }
+      h1 { font-size: 1.5rem; margin-bottom: 5px; }
+      p { font-size: 0.9rem; margin-bottom: 15px; }
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
+    <!-- Step 1: The Survey -->
     <div id="survey-ui">
-      <h1>How was your experience today?</h1>
-      <p></p>
+      <h1>Selamat Datang</h1>
+      <p>How was your experience today?</p>
+      
       <div class="emoji-group">
-        <button class="emoji-btn" onclick="submitFeedback('Bad')">
+        <!-- Not worth it -->
+        <button class="emoji-btn" onclick="submitFeedback('Not worth it')">
           <span class="emoji">😞</span>
-          <span class="label">Bad</span>
+          <span class="label">Not worth it</span>
         </button>
-        <button class="emoji-btn" onclick="submitFeedback('Okay')">
+
+        <!-- Neutral -->
+        <button class="emoji-btn" onclick="submitFeedback('Neutral')">
           <span class="emoji">😐</span>
-          <span class="label">Okay</span>
+          <span class="label">Neutral</span>
         </button>
-        <button class="emoji-btn" onclick="submitFeedback('Good')">
+
+        <!-- Worth it -->
+        <button class="emoji-btn" onclick="submitFeedback('Worth it')">
           <span class="emoji">😊</span>
-          <span class="label">Good</span>
+          <span class="label">Worth it</span>
         </button>
-        <button class="emoji-btn" onclick="submitFeedback('Amazing')">
+
+        <!-- Very worth it -->
+        <button class="emoji-btn" onclick="submitFeedback('Very worth it')">
           <span class="emoji">😍</span>
-          <span class="label">Amazing</span>
+          <span class="label">Very worth it</span>
         </button>
       </div>
     </div>
 
+    <!-- Step 2: The Success Message -->
     <div id="thank-you-ui">
       <div class="success-icon">✨</div>
-      <h1>Thank you!</h1>
-      <p>Your feedback helps us improve.</p>
+      <h1>Terima Kasih!</h1>
+      <p>Your feedback has been saved successfully.</p>
+      <small style="color: #999;">Resetting for next visitor...</small>
     </div>
   </div>
 
@@ -107,18 +145,26 @@
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw84oD3P8wRiHYiEJBw-0zRU7ghEKUalAY6ObfWaYZ8WAe3rvqwQiHNlwfVyQ-HWv378g/exec';
 
     function submitFeedback(rating) {
+      // 1. Show Thank You UI immediately
       document.getElementById('survey-ui').style.display = 'none';
       document.getElementById('thank-you-ui').style.display = 'block';
 
+      // 2. Send the new labels to your Google Sheet
       fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rating: rating })
-      });
+      })
+      .then(() => console.log("Data sent: " + rating))
+      .catch(err => console.error("Error:", err));
 
-      setTimeout(() => { window.location.reload(); }, 2000);
+      // 3. Refresh after 2 seconds
+      setTimeout(() => { 
+        window.location.reload(); 
+      }, 2000);
     }
   </script>
+
 </body>
 </html>
